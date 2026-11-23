@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROOMIE – Share Fairly, Live Comfortably</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Firebase SDKs (compat for simple vanilla JS) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <!-- LOGIN / DEMO SCREEN -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-mark">R</span>
+        <h1>ROOMIE</h1>
+      </div>
+      <p class="auth-slogan">Share Fairly – Live Comfortably</p>
+      <p class="auth-desc">Nền tảng quản lý chi tiêu chung cho người sống cùng nhau. Minh bạch – Công bằng – Thuận tiện.</p>
+      
+      <div class="auth-actions">
+        <button id="btn-demo" class="btn btn-primary btn-lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13 12H3"/></svg>
+          Trải nghiệm Demo
+        </button>
+        <p class="auth-note">Phòng <strong>The Cozy House</strong> · Bắt đầu từ <strong>0đ</strong> – tự nhập khoản chi mới.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="app hidden">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-mark">R</span>
+          <span class="logo-text">ROOMIE</span>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="household">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Phòng</span>
+        </a>
+        <a href="#" class="nav-item" data-page="expenses">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Khoản chi</span>
+        </a>
+        <a href="#" class="nav-item" data-page="debts">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Công nợ</span>
+        </a>
+        <a href="#" class="nav-item" data-page="history">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Lịch sử</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-switcher">
+          <label class="switcher-label">Đang xem với tư cách</label>
+          <select id="user-switcher" class="user-select"></select>
+        </div>
+        <div class="user-info">
+          <div class="avatar" id="current-avatar">T</div>
+          <div class="user-meta">
+            <span class="user-name" id="current-user-name">Thương</span>
+            <span class="user-role">Thành viên</span>
+          </div>
+        </div>
+        <button id="btn-load-sample" class="btn-text" title="Tải dữ liệu mẫu để demo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Tải dữ liệu mẫu
+        </button>
+        <button id="btn-reset-demo" class="btn-text" title="Xóa hết khoản chi về 0đ">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Xóa về 0đ
+        </button>
+        <button id="btn-logout" class="btn-text">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Đăng xuất
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <!-- DASHBOARD PAGE -->
+      <section id="page-dashboard" class="page active">
+        <header class="page-header">
+          <div>
+            <p class="greeting" id="greeting">Xin chào, Thương</p>
+            <h2 class="page-title">Tổng quan tài chính</h2>
+          </div>
+          <button class="btn btn-primary" id="btn-add-expense-dash">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Thêm khoản chi
+          </button>
+        </header>
+
+        <!-- Nhắc nhở thanh toán -->
+        <div id="reminder-banner" class="reminder-banner hidden">
+          <div class="reminder-icon">!</div>
+          <div class="reminder-body">
+            <div class="reminder-title" id="reminder-title">Bạn còn khoản cần thanh toán</div>
+            <div class="reminder-text" id="reminder-text"></div>
+          </div>
+          <button class="btn btn-sm btn-primary" id="btn-reminder-go">Xem công nợ</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card clickable-stat" data-stat="total">
+            <div class="stat-label">Tổng chi tiêu tháng này</div>
+            <div class="stat-value" id="stat-total-expense">0đ</div>
+            <div class="stat-hint">Bấm để xem chi tiết</div>
+          </div>
+          <div class="stat-card clickable-stat" data-stat="paid">
+            <div class="stat-label">Bạn đã thanh toán</div>
+            <div class="stat-value" id="stat-you-paid">0đ</div>
+            <div class="stat-hint">Bấm để xem chi tiết</div>
+          </div>
+          <div class="stat-card highlight-negative clickable-stat" data-stat="owe">
+            <div class="stat-label">Bạn cần thanh toán</div>
+            <div class="stat-value" id="stat-you-owe">0đ</div>
+            <div class="stat-hint">Bấm để xem chi tiết</div>
+          </div>
+          <div class="stat-card highlight-positive clickable-stat" data-stat="owed">
+            <div class="stat-label">Người khác nợ bạn</div>
+            <div class="stat-value" id="stat-owed-to-you">0đ</div>
+            <div class="stat-hint">Bấm để xem chi tiết</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Chi tiêu theo danh mục</h3>
+            </div>
+            <div class="card-body">
+              <div id="category-chart" class="category-chart"></div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <h3>Tình trạng công nợ</h3>
+            </div>
+            <div class="card-body">
+              <div id="debt-summary" class="debt-summary"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Giao dịch gần đây</h3>
+            <a href="#" class="link" data-page="history">Xem tất cả</a>
+          </div>
+          <div class="card-body">
+            <div id="recent-transactions" class="transaction-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOUSEHOLD PAGE -->
+      <section id="page-household" class="page">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Quản lý phòng</h2>
+            <p class="page-subtitle" id="household-location">Hà Nội</p>
+          </div>
+          <button class="btn btn-primary" id="btn-add-member">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Thêm thành viên
+          </button>
+        </header>
+
+        <div class="card household-card">
+          <div class="household-header">
+            <div>
+              <h3 id="household-name">The Cozy House</h3>
+              <p class="text-muted" id="member-count">4 thành viên</p>
+            </div>
+            <button class="btn btn-secondary" id="btn-invite">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              Mã mời
+            </button>
+          </div>
+          
+          <div class="members-grid" id="members-list"></div>
+        </div>
+
+        <div class="card invite-card hidden" id="invite-panel">
+          <h4>Mời thành viên mới</h4>
+          <p class="text-muted">Chia sẻ mã hoặc link dưới đây để mời bạn cùng phòng.</p>
+          <div class="invite-code">
+            <code id="invite-code">COZY-2024-HN</code>
+            <button class="btn btn-sm" id="btn-copy-code">Sao chép</button>
+          </div>
+          <p class="invite-link">Link: <span id="invite-link">https://roomie.app/join/COZY-2024-HN</span></p>
+        </div>
+      </section>
+
+      <!-- EXPENSES PAGE -->
+      <section id="page-expenses" class="page">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Quản lý khoản chi</h2>
+            <p class="page-subtitle">Thêm, chỉnh sửa và phân chia chi phí</p>
+          </div>
+          <button class="btn btn-primary" id="btn-add-expense">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Thêm khoản chi
+          </button>
+        </header>
+
+        <div class="card">
+          <div class="card-body">
+            <div id="expenses-list" class="expenses-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEBTS PAGE -->
+      <section id="page-debts" class="page">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Theo dõi công nợ</h2>
+            <p class="page-subtitle">Ai đang nợ ai và số tiền cần thanh toán</p>
+          </div>
+        </header>
+
+        <div class="stats-grid three-col">
+          <div class="stat-card">
+            <div class="stat-label">Số dư của bạn</div>
+            <div class="stat-value" id="debt-your-balance">0đ</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Tổng bạn cần trả</div>
+            <div class="stat-value negative" id="debt-you-owe-total">0đ</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Tổng người khác nợ bạn</div>
+            <div class="stat-value positive" id="debt-owed-total">0đ</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Số dư các thành viên</h3>
+          </div>
+          <div class="card-body">
+            <div id="balances-list" class="balances-list"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Gợi ý thanh toán</h3>
+            <p class="text-muted">Các khoản cần đối soát</p>
+          </div>
+          <div class="card-body">
+            <div id="settlement-suggestions" class="settlement-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTORY PAGE -->
+      <section id="page-history" class="page">
+        <header class="page-header">
+          <div>
+            <h2 class="page-title">Lịch sử giao dịch</h2>
+            <p class="page-subtitle">Toàn bộ khoản chi và thanh toán</p>
+          </div>
+        </header>
+
+        <div class="filters-bar">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-history" placeholder="Tìm theo tên khoản chi...">
+          </div>
+          <select id="filter-category">
+            <option value="all">Tất cả danh mục</option>
+            <option value="food">Ăn uống</option>
+            <option value="utility">Hóa đơn</option>
+            <option value="household">Đồ dùng sinh hoạt</option>
+            <option value="shopping">Mua sắm chung</option>
+            <option value="other">Khác</option>
+            <option value="settlement">Thanh toán</option>
+          </select>
+          <select id="filter-time">
+            <option value="all">Tất cả thời gian</option>
+            <option value="this-month">Tháng này</option>
+            <option value="last-month">Tháng trước</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div id="history-list" class="history-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: ADD / EDIT EXPENSE -->
+  <div id="modal-expense" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-expense-title">Thêm khoản chi mới</h3>
+        <button class="modal-close" data-close>&times;</button>
+      </div>
+      <form id="form-expense">
+        <div class="form-group">
+          <label for="expense-name">Tên khoản chi *</label>
+          <input type="text" id="expense-name" required placeholder="Ví dụ: Tiền điện tháng 11">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="expense-amount">Số tiền (đ) *</label>
+            <input type="number" id="expense-amount" required min="1" step="1" placeholder="VD: 100000">
+          </div>
+          <div class="form-group">
+            <label for="expense-date">Ngày *</label>
+            <input type="date" id="expense-date" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="expense-category">Danh mục *</label>
+          <select id="expense-category" required>
+            <option value="food">Ăn uống</option>
+            <option value="utility">Hóa đơn (điện, nước, Internet)</option>
+            <option value="household">Đồ dùng sinh hoạt</option>
+            <option value="shopping">Mua sắm chung</option>
+            <option value="other">Khác</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="expense-payer">Người thanh toán *</label>
+          <select id="expense-payer" required></select>
+        </div>
+        <div class="form-group">
+          <label>Thành viên tham gia chia *</label>
+          <div id="expense-participants" class="participants-list"></div>
+        </div>
+        <div class="form-group">
+          <label>Cách chia</label>
+          <div class="split-type">
+            <label class="radio-label">
+              <input type="radio" name="split-type" value="equal" checked>
+              <span>Chia đều</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="split-type" value="custom">
+              <span>Chia tùy chỉnh</span>
+            </label>
+          </div>
+        </div>
+        <div id="custom-split-area" class="custom-split hidden"></div>
+        <div class="form-group">
+          <label for="expense-note">Ghi chú</label>
+          <textarea id="expense-note" rows="2" placeholder="Ghi chú thêm (không bắt buộc)"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close>Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu khoản chi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTLEMENT -->
+  <div id="modal-settle" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3>Ghi nhận thanh toán</h3>
+        <button class="modal-close" data-close>&times;</button>
+      </div>
+      <form id="form-settle">
+        <input type="hidden" id="settle-from">
+        <input type="hidden" id="settle-to">
+        <p class="settle-info" id="settle-info"></p>
+        <div class="form-group">
+          <label for="settle-amount">Số tiền thanh toán (đ) *</label>
+          <input type="number" id="settle-amount" required min="1" step="1">
+        </div>
+        <div class="form-group">
+          <label for="settle-note">Ghi chú</label>
+          <input type="text" id="settle-note" placeholder="Thanh toán một phần / toàn bộ">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close>Hủy</button>
+          <button type="submit" class="btn btn-primary">Xác nhận thanh toán</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: STAT DETAIL -->
+  <div id="modal-stat" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-stat-title">Chi tiết</h3>
+        <button class="modal-close" data-close>&times;</button>
+      </div>
+      <div class="modal-body" id="stat-detail-content">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT MEMBER -->
+  <div id="modal-member" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3 id="modal-member-title">Thêm thành viên</h3>
+        <button class="modal-close" data-close>&times;</button>
+      </div>
+      <form id="form-member">
+        <div class="form-group">
+          <label for="member-name">Tên thành viên *</label>
+          <input type="text" id="member-name" required placeholder="Ví dụ: Ngọc Anh" maxlength="30">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close>Hủy</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-member">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EXPENSE DETAIL -->
+  <div id="modal-detail" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Chi tiết khoản chi</h3>
+        <button class="modal-close" data-close>&times;</button>
+      </div>
+      <div class="modal-body" id="detail-content">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
